@@ -1,8 +1,4 @@
-
-
 public class EntityMapperClass {
-    public EntityMapperClass() {
-    }
 
     public static String getCoreString() {
         return "public interface EntityMapper<E, T, D> {\n" +

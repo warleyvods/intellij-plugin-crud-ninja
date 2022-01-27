@@ -40,22 +40,21 @@ public class GenerateCrud extends AnAction {
         PsiFile psiFile = anActionEvent.getData(LangDataKeys.PSI_FILE);
         System.out.println();
 
-        //VERIFICA SE O ARQUIVO É UM JAVA FILE.
         if (!Objects.requireNonNull(psiFile).getFileType().getName().equals("JAVA")) {
-            Messages.showMessageDialog(this.project, "You shoud run this generator on Java file", "Information", Messages.getInformationIcon());
+            Messages.showMessageDialog(this.project, "You should run this generator on Java file", "Information", Messages.getInformationIcon());
             return;
         }
 
         PsiJavaFile javaFile = (PsiJavaFile) psiFile;
         PsiClass[] classes = javaFile.getClasses();
         if (0 == classes.length) {
-            Messages.showMessageDialog(this.project, "No class found", "Information", Messages.getInformationIcon());
+            Messages.showMessageDialog(this.project, "No class found", "Information", Messages.getErrorIcon());
             return;
         }
 
         PsiClass aClass = classes[0];
         if (null == aClass.getAnnotation("javax.persistence.Entity")) {
-            Messages.showMessageDialog(this.project, "This class is not an entity", "Information", Messages.getInformationIcon());
+            Messages.showMessageDialog(this.project, "This class is not a entity", "Information", Messages.getErrorIcon());
             return;
         }
 
@@ -109,12 +108,6 @@ public class GenerateCrud extends AnAction {
         PsiDirectory serviceImplDirectory = entityClasses.getServiceDirectory();
         StringBuilder content = (new StringBuilder("@Service public class "))
                 .append(serviceName).append("{");
-        PsiClass repositoryClass = entityClasses.getRepositoryClass();
-        String saveAllMethod = "save";
-        if (0 != repositoryClass.findMethodsByName("saveAll", true).length) {
-            saveAllMethod = "saveAll";
-        }
-
         content.append(ServiceImplClass.getContent(entityClasses));
         content.append("}");
         ClassCreator.of(this.project).init(serviceName, content.toString())
@@ -124,11 +117,9 @@ public class GenerateCrud extends AnAction {
                 .importClass("AbstractBaseEntityService")
                 .importClass("com.github.pagehelper.PageInfo")
                 .addTo(serviceImplDirectory).and((implClass) -> {
-                    this.psiUtils.importClass(implClass, new PsiClass[]{
-                            entityClasses.getRepositoryClass()
-                    });
+                    this.psiUtils.importClass(implClass, entityClasses.getRepositoryClass());
                     entityClasses.setServiceClass(implClass);
-                    this.psiUtils.importClass(implClass, new PsiClass[0]);
+                    this.psiUtils.importClass(implClass);
                     this.createMapperClass(entityClasses);
                 });
     }
@@ -137,15 +128,10 @@ public class GenerateCrud extends AnAction {
         PsiDirectory controllerDirectory = null == this.containerDirectory.getParent() ? this.containerDirectory :
                 this.psiUtils.getOrCreateSubDirectory(this.containerDirectory.getParent(), "controller");
         entityClasses.setControllerDirectory(controllerDirectory);
-//        this.createControllerInterface(entityClasses);
         PsiFile[] files = controllerDirectory.getFiles();
         String prefix = "/api/";
         if (0 != files.length) {
-            PsiFile[] var6 = files;
-            int var7 = files.length;
-
-            for (int var8 = 0; var8 < var7; ++var8) {
-                PsiFile file = var6[var8];
+            for (PsiFile file : files) {
                 if (file instanceof PsiJavaFile) {
                     Optional<String> value = this.psiUtils.getAnnotationValue(file, "org.springframework.web.bind.annotation.RequestMapping", "value");
                     if (value.isPresent() && !((String) value.get()).startsWith("/api")) {
@@ -155,14 +141,12 @@ public class GenerateCrud extends AnAction {
             }
         }
 
-        Optional<PsiClass> apiClass = this.psiUtils.findClass("io.swagger.annotations.Api");
-        boolean useAPI = apiClass.isPresent();
         Optional<PsiClass> baseClassOptional = this.psiUtils.findClass("BaseController");
         String suffix = "Controller";
-        if (!baseClassOptional.isPresent()) {
+        if (baseClassOptional.isEmpty()) {
             baseClassOptional = this.psiUtils.findClass("BaseResource");
             suffix = "Resource";
-            if (!baseClassOptional.isPresent()) {
+            if (baseClassOptional.isEmpty()) {
                 suffix = "Controller";
             }
         }
@@ -173,54 +157,52 @@ public class GenerateCrud extends AnAction {
         }).orElse("");
         String var10000 = controllerPath.substring(0, 1).toLowerCase();
         controllerPath = var10000 + controllerPath.substring(1);
-        entityClasses.setControllerPath(controllerPath);
         StringBuilder content = new StringBuilder();
-        content.append("@RequestMapping(\"").append(prefix).append(controllerPath).append("/"+"\")")
+        content.append("@RequestMapping(\"").append(prefix).append(controllerPath).append("/" + "\")")
                 .append("@RestController");
 
         content.append(" public class ").append(entityName).append(suffix);
         String entityFieldName = MyStringUtils.firstLetterToLower(entityName);
-        entityClasses.setEntityFieldName(entityFieldName);
         StringBuilder var19 = content.append("{");
 
         //CONSTRUCTOR
         String var10002 = entityClasses.getMapperClass().getName();
         String var10001 = entityClasses.getServiceClass().getName();
-        var19.append("private final " + var10001 + " " + entityFieldName + "Service; ");
-        var19.append("private final " + var10002 + " " + entityFieldName + "Mapper; ");
-        var19.append("public " + entityName + suffix + "(" + entityClasses.getServiceClass().getName() + " " + entityFieldName + "Service ," + entityClasses.getMapperClass().getName() + " " + entityFieldName + "Mapper) {");
-        var19.append("this." + entityFieldName + "Service = " + entityFieldName + "Service;");
-        var19.append("this." + entityFieldName + "Mapper = " + entityFieldName + "Mapper;");
+        var19.append("private final ").append(var10001).append(" ").append(entityFieldName).append("Service; ");
+        var19.append("private final ").append(var10002).append(" ").append(entityFieldName).append("Mapper; ");
+        var19.append("public ").append(entityName).append(suffix).append("(").append(entityClasses.getServiceClass().getName()).append(" ").append(entityFieldName).append("Service ,").append(entityClasses.getMapperClass().getName()).append(" ").append(entityFieldName).append("Mapper) {");
+        var19.append("this.").append(entityFieldName).append("Service = ").append(entityFieldName).append("Service;");
+        var19.append("this.").append(entityFieldName).append("Mapper = ").append(entityFieldName).append("Mapper;");
         var19.append("}");
 
 
         //SAVE
         var19.append("@ResponseStatus(HttpStatus.CREATED)\n@PostMapping ");
-        var19.append("public "+ entityClasses.getDtoResponseClass().getName() +" save(@RequestBody @Valid ");
+        var19.append("public ").append(entityClasses.getDtoResponseClass().getName()).append(" save(@RequestBody @Valid ");
         var19.append(entityClasses.getDtoRequestClass().getName()).append(" ").append(entityFieldName + "RequestDTO").append(") { ");
-        var19.append(entityClasses.getEntityClass().getName() + " " + entityFieldName +" = " + entityFieldName + "Service.save(" + entityFieldName + "Mapper.toDomain(" + entityFieldName + "RequestDTO));");
-        var19.append("return "+ entityFieldName + "Mapper.fromDomain(" + entityFieldName +  "); }");
+        var19.append(entityClasses.getEntityClass().getName()).append(" ").append(entityFieldName).append(" = ").append(entityFieldName).append("Service.save(").append(entityFieldName).append("Mapper.toDomain(").append(entityFieldName).append("RequestDTO));");
+        var19.append("return ").append(entityFieldName).append("Mapper.fromDomain(").append(entityFieldName).append("); }");
 
 
         //FINDBYID
-        var19.append("@ResponseStatus(HttpStatus.OK)\n@GetMapping(\"{id}\") public "+ entityClasses.getDtoResponseClass().getName() +" findById(@PathVariable ");
-        var19.append(entityClasses.getIdField().getType().getPresentableText() + " id) {");
-        var19.append("return "+ entityFieldName + "Mapper.fromDomain(" + entityFieldName + "Service.findById(id)"+ "); }");
+        var19.append("@ResponseStatus(HttpStatus.OK)\n@GetMapping(\"{id}\") public ").append(entityClasses.getDtoResponseClass().getName()).append(" findById(@PathVariable ");
+        var19.append(entityClasses.getIdField().getType().getPresentableText()).append(" id) {");
+        var19.append("return ").append(entityFieldName).append("Mapper.fromDomain(").append(entityFieldName).append("Service.findById(id)").append("); }");
 
         //DELETE
         var19.append("@ResponseStatus(HttpStatus.NO_CONTENT)\n@DeleteMapping(\"{id}\") public void delete(@PathVariable ");
-        var19.append(entityClasses.getIdField().getType().getPresentableText() + " id) {").append(entityFieldName);
+        var19.append(entityClasses.getIdField().getType().getPresentableText()).append(" id) {").append(entityFieldName);
         var19.append("Service.deleteById(id);\n}");
 
         //UPDATE
-        var19.append("@ResponseStatus(HttpStatus.OK)\n@PutMapping(\"{id}\") public " + entityClasses.getDtoResponseClass().getName());
-        var19.append(" update(@RequestBody @Valid " + entityClasses.getDtoRequestClass().getName() + " " + entityFieldName + "RequestDTO, @PathVariable " + entityClasses.getIdField().getType().getPresentableText() + " id) { ");
-        var19.append(entityName + " update = " + entityFieldName+"Service.update(" + entityFieldName + "Mapper.toDomain(" + entityFieldName+"RequestDTO), id);");
-        var19.append("return " + entityFieldName + "Mapper.fromDomain(update);\n}");
+        var19.append("@ResponseStatus(HttpStatus.OK)\n@PutMapping(\"{id}\") public ").append(entityClasses.getDtoResponseClass().getName());
+        var19.append(" update(@RequestBody @Valid ").append(entityClasses.getDtoRequestClass().getName()).append(" ").append(entityFieldName).append("RequestDTO, @PathVariable ").append(entityClasses.getIdField().getType().getPresentableText()).append(" id) { ");
+        var19.append(entityName).append(" update = ").append(entityFieldName).append("Service.update(").append(entityFieldName).append("Mapper.toDomain(").append(entityFieldName).append("RequestDTO), id);");
+        var19.append("return ").append(entityFieldName).append("Mapper.fromDomain(update);\n}");
 
         //LIST ALL
-        var19.append("@ResponseStatus(HttpStatus.OK)\n@GetMapping public " + "List<" + entityClasses.getDtoResponseClass().getName() + "> listAll() {");
-        var19.append("return "+ entityFieldName + "Mapper.fromDomainList(" + entityFieldName + "Service.findAll()"+ "); }");
+        var19.append("@ResponseStatus(HttpStatus.OK)\n@GetMapping public " + "List<").append(entityClasses.getDtoResponseClass().getName()).append("> listAll() {");
+        var19.append("return ").append(entityFieldName).append("Mapper.fromDomainList(").append(entityFieldName).append("Service.findAll()").append("); }");
 
         var19.append("\n}");
 
@@ -242,12 +224,7 @@ public class GenerateCrud extends AnAction {
                 .importClass(entityClasses.getMapperClass())
                 .importClass(entityClasses.getServiceClass())
                 .addTo(entityClasses.getControllerDirectory())
-                .and(entityClasses::setControllerClass);
-        WriteCommandAction.runWriteCommandAction(this.testProject, () -> {
-//            this.createUtilsClass(entityClasses);
-//            this.createAnnotation();
-//            this.createBuilderClass(entityClasses);
-        });
+                .and(entityClasses::setControllerClass); //FINISH HERE!
     }
 
     private void createMapperClass(EntityClasses entityClasses) {
@@ -312,5 +289,4 @@ public class GenerateCrud extends AnAction {
         }
         return annotationMaps;
     }
-
 }

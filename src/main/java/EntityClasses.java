@@ -19,8 +19,6 @@ public class EntityClasses {
     private PsiDirectory serviceDirectory;
     private PsiDirectory mapperDirectory;
     private PsiDirectory controllerDirectory;
-    private String controllerPath;
-    private String entityFieldName;
 
     public EntityClasses() {
     }
@@ -134,14 +132,6 @@ public class EntityClasses {
         return Stream.of(this.entityClass.getFields()).filter((psiField) ->
                 Stream.of(Objects.requireNonNull(psiField.getModifierList()).getAnnotations()).anyMatch((psiAnnotation) ->
                         psiAnnotation.getText().equals("@Id"))).findFirst().get();
-    }
-
-    public void setControllerPath(String controllerPath) {
-        this.controllerPath = controllerPath;
-    }
-
-    public void setEntityFieldName(String entityFieldName) {
-        this.entityFieldName = entityFieldName;
     }
 
 }
