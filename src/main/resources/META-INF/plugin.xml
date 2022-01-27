@@ -33,6 +33,9 @@
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
     </extensions>
+    <change-notes>
+        <![CDATA[ ]]>
+    </change-notes>
 
     <actions>
         <action id="codeCrudGenerator" class="GenerateCrud" text="Generator CRUD">
