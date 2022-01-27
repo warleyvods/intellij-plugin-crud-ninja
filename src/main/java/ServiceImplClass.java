@@ -9,7 +9,6 @@ public class ServiceImplClass {
     }
 
     public static String getContent(EntityClasses entityClasses) {
-//        String serviceName = entityClasses.getServiceClass().getName();
         String serviceName = entityClasses.getEntityName().concat("Service");
         String entityName = entityClasses.getEntityName();
         String entityFieldName = MyStringUtils.firstLetterToLower(entityName);
@@ -38,6 +37,11 @@ public class ServiceImplClass {
                 .append("public ").append(entityClasses.getEntityClass().getName())
                 .append(" findById(" + entityClasses.getIdType() + " id) { ")
                 .append("return " + "repository.findById(id).orElseThrow(" + entityClasses.getEntityClass().getName() + "NotFoundException::new);}")
+
+                //FINDALL - OK
+                .append("public List<").append(entityClasses.getEntityClass().getName()).append(">")
+                .append(" findAll() { ")
+                .append("return " + "repository.findAll();}")
 
                 //UPDATE
                 .append("public " + entityClasses.getEntityClass().getName() + " update(" + entityClasses.getEntityClass().getName())

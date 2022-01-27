@@ -46,7 +46,7 @@ public class ClassCreator {
     }
 
     ClassCreator importClassIf(String className, Supplier<Boolean> supplier) {
-        if ((Boolean)supplier.get()) {
+        if (supplier.get()) {
             this.importClass(className);
         }
 
@@ -62,12 +62,10 @@ public class ClassCreator {
     }
 
     ClassCreator importClass(PsiClass psiClass) {
-        if (null == psiClass) {
-            return this;
-        } else {
+        if (null != psiClass) {
             this.javaFile.importClass(psiClass);
-            return this;
         }
+        return this;
     }
 
     And addTo(PsiDirectory psiDirectory) {

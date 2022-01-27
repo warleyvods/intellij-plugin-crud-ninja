@@ -1,10 +1,4 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 import org.apache.commons.lang3.StringUtils;
-
 
 public class MyStringUtils {
     public MyStringUtils() {
