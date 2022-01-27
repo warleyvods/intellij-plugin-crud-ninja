@@ -4,10 +4,7 @@
 //
 
 
-public class ServiceImplClass {
-    public ServiceImplClass() {
-    }
-
+public class ServiceCreator {
     public static String getContent(EntityClasses entityClasses) {
         String serviceName = entityClasses.getEntityName().concat("Service");
         String entityName = entityClasses.getEntityName();

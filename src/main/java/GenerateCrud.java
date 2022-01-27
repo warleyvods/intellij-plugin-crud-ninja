@@ -21,17 +21,10 @@ import java.util.function.Consumer;
 public class GenerateCrud extends AnAction {
 
     private static final String TITLE_INFORMATION = "Information";
-    private static final String TITLE = "Madaoo Demo";
     private Project project;
     private PsiDirectory containerDirectory;
     private PsiUtils psiUtils;
-    private Module module;
-    private PsiDirectory parentDirectory;
     private PsiPackageStatement packageFile;
-    private PsiDirectory containerDirectoryTest;
-    private Project testProject;
-    private PsiDirectory controllerTestDirectory;
-
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent anActionEvent) {
@@ -60,19 +53,18 @@ public class GenerateCrud extends AnAction {
 
         this.containerDirectory = javaFile.getContainingDirectory();
         this.containerDirectory = javaFile.getContainingDirectory();
-        this.module = FileIndexFacade.getInstance(this.project).getModuleForFile(psiFile.getVirtualFile());
+        Module module = FileIndexFacade.getInstance(this.project).getModuleForFile(psiFile.getVirtualFile());
         EntityClasses entityClasses = (new EntityClasses()).setServiceDirectory(createServiceDirectory()).setEntityClass(aClass);
-        this.parentDirectory = entityClasses.getServiceDirectory().getParent();
+        PsiDirectory parentDirectory = entityClasses.getServiceDirectory().getParent();
         Optional<VirtualFile> optionalVirtualFile = ProjectRootManager.getInstance(this.project).getModuleSourceRoots(JavaModuleSourceRootTypes.TESTS).stream().findFirst();
 
         if (optionalVirtualFile.isPresent()) {
             VirtualFile virtualFile = optionalVirtualFile.get();
-            this.containerDirectoryTest = PsiManager.getInstance(this.project).findDirectory(virtualFile);
+            PsiDirectory containerDirectoryTest = PsiManager.getInstance(this.project).findDirectory(virtualFile);
             String packageName = javaFile.getPackageName();
             String last = packageName.substring(packageName.lastIndexOf('.') + 1);
             String folderName = packageName.replace(last, "");
-            this.controllerTestDirectory = this.psiUtils.getOrCreateSubDirectory(this.containerDirectoryTest, folderName + "controller");
-            this.testProject = this.containerDirectoryTest.getProject();
+            PsiDirectory controllerTestDirectory = this.psiUtils.getOrCreateSubDirectory(containerDirectoryTest, folderName + "controller");
         } else {
             Messages.showMessageDialog(this.project, "Module test not defined", "Information", Messages.getInformationIcon());
         }
@@ -108,7 +100,7 @@ public class GenerateCrud extends AnAction {
         PsiDirectory serviceImplDirectory = entityClasses.getServiceDirectory();
         StringBuilder content = (new StringBuilder("@Service public class "))
                 .append(serviceName).append("{");
-        content.append(ServiceImplClass.getContent(entityClasses));
+        content.append(ServiceCreator.getContent(entityClasses));
         content.append("}");
         ClassCreator.of(this.project).init(serviceName, content.toString())
                 .importClass(entityClasses.getEntityClass())

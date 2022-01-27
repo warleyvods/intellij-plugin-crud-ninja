@@ -1,15 +1,32 @@
 <idea-plugin>
     <id>com.warley.crud-ninja</id>
     <name>Crud Ninja</name>
-    <vendor email="warleyvods@gmail.com" url="http://www.warleyvods.com">Warley Vinicius</vendor>
+    <vendor email="warleyvods@gmail.com">Warley Vinicius</vendor>
 
     <description><![CDATA[
-    The fastest way to develop an entity based CRUD.<br>
-    <em>most HTML tags may be used</em>
-    ]]></description>
+    The fastest way to create a CRUD from entity!<br>
+    Spring Only*<br>
 
-    <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
-         on how to target different products -->
+    <p>
+        Right-click on entity and click "Create a Crud" to generate:
+        <li>Repository</li>
+        <li>Service</li>
+        <li>DTO's (Requests and Responses)</li>
+        <li>Mapper (With MapStruct)</li>
+        <li>Controller</li>
+        </ul>
+    </p>
+    <p>
+        Dependencies:
+        <ul>
+            <li>Spring Boot</li>
+            <li>Mapstruct 1.4 or > </li>
+        </ul>
+    </p>
+
+    ]]>
+    </description>
+
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
 
