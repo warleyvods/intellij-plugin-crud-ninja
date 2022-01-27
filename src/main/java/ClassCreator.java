@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 import com.intellij.ide.highlighter.JavaFileType;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
@@ -12,16 +7,14 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 
 public class ClassCreator {
     private PsiJavaFile javaFile;
-    private Project project;
-    private PsiUtils psiUtils;
+    private final Project project;
+    private final PsiUtils psiUtils;
 
     private ClassCreator(Project project) {
         this.project = project;
@@ -42,22 +35,6 @@ public class ClassCreator {
             return this;
         Objects.requireNonNull(this.javaFile);
         this.psiUtils.findClassGlobal(className, psiClass -> true).ifPresent(this.javaFile::importClass);
-        return this;
-    }
-
-    ClassCreator importClassIf(String className, Supplier<Boolean> supplier) {
-        if (supplier.get()) {
-            this.importClass(className);
-        }
-
-        return this;
-    }
-
-    ClassCreator importClassIf(Supplier<String> nameSupplier, Supplier<Boolean> supplier) {
-        if ((Boolean)supplier.get()) {
-            this.importClass((String)nameSupplier.get());
-        }
-
         return this;
     }
 
@@ -88,12 +65,8 @@ public class ClassCreator {
             PsiField field = var6[var8];
             String name = field.getName();
 
-            assert name != null;
-
             PsiType type = field.getType();
-            this.psiUtils.findClass(type.getCanonicalText()).ifPresent((typeClass) -> {
-                this.psiUtils.importClass(aClass, new PsiClass[]{typeClass});
-            });
+            this.psiUtils.findClass(type.getCanonicalText()).ifPresent((typeClass) -> this.psiUtils.importClass(aClass, typeClass));
             String typeName = type.getPresentableText();
             if (typeName.contains(".")) {
                 typeName = typeName.substring(typeName.lastIndexOf(".") + 1);
@@ -105,7 +78,6 @@ public class ClassCreator {
                 annotationStringBuilder.append("@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)");
             }
 
-            // StringUtils.equals compatible idea 193 version
 	        if (StringUtils.equals(typeName,"Date") || StringUtils.equals(typeName,"LocalDate")) {
 		        annotationStringBuilder.append("@CheckDate ");
 		        this.importClass("CheckDate");
@@ -137,7 +109,8 @@ public class ClassCreator {
 			        this.importClass("javax.validation.constraints.Size");
 		        }
 
-		        if ("false".equals(nullableValue.getText())){
+                assert nullableValue != null;
+                if ("false".equals(nullableValue.getText())){
 			        if ("String".equals(typeName) && !name.equalsIgnoreCase("id")) {
 				        annotationStringBuilder.append("@NotBlank ");
 				        this.importClass("javax.validation.constraints.NotBlank");
@@ -150,9 +123,10 @@ public class ClassCreator {
 			        }
 		        }
 
-		        String comment = getComment(columnDefinition.getText());
+                assert columnDefinition != null;
+                String comment = getComment(columnDefinition.getText());
 		        if (StringUtils.isNotBlank(comment)){
-			        annotationStringBuilder.append("@ApiModelProperty(\""+comment+"\")\n ");
+			        annotationStringBuilder.append("@ApiModelProperty(\"").append(comment).append("\")\n ");
 			        this.importClass("io.swagger.annotations.ApiModelProperty;");
 		        }
 	        }
@@ -173,22 +147,7 @@ public class ClassCreator {
         return this;
     }
 
-	private PsiMethod getConstructeurWithParam(PsiElementFactory psiElementFactory, PsiClass aClass, PsiField[] fields) {
-        PsiMethod constructor = psiElementFactory.createConstructor(aClass.getQualifiedName());
-        constructor.getModifierList().setModifierProperty("public", true);
-        Stream.of(fields).forEach((psiField) -> {
-            PsiParameter builderParameter = psiElementFactory.createParameter(psiField.getName(), psiField.getType());
-            constructor.getParameterList().add(builderParameter);
-        });
-        return constructor;
-    }
-
-    private String createBuilderSetter(String className, String name, String type) {
-        return "public " + className + " " + name + "(" + type + " " + name + ") {this." + name + " = " + name + ";return this;}";
-    }
-
     private String createSetter(@NotNull String name, String type) {
-
         String var10000 = name.substring(0, 1).toUpperCase();
         return "public void set" + var10000 + name.substring(1) + "(" + type + " " + name + ") {this." + name + " = " + name + ";}";
     }
@@ -208,7 +167,7 @@ public class ClassCreator {
     }
 
     public static class And {
-        private PsiClass psiClass;
+        private final PsiClass psiClass;
 
         public And(PsiClass psiClass) {
             this.psiClass = psiClass;
