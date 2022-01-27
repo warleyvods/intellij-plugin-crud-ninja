@@ -1,16 +1,17 @@
 <idea-plugin>
     <id>com.warley.crud-ninja</id>
-    <name>Plugin display name here</name>
-    <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+    <name>Crud Ninja</name>
+    <vendor email="warleyvods@gmail.com" url="http://www.warleyvods.com">Warley Vinicius</vendor>
 
     <description><![CDATA[
-    Enter short description for your plugin here.<br>
+    The fastest way to develop an entity based CRUD.<br>
     <em>most HTML tags may be used</em>
     ]]></description>
 
     <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
          on how to target different products -->
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
