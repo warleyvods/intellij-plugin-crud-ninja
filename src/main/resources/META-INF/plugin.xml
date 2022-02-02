@@ -34,11 +34,13 @@
         <!-- Add your extensions here -->
     </extensions>
     <change-notes>
-        <![CDATA[ ]]>
+        <![CDATA[
+           1.0.0 Initial release
+        ]]>
     </change-notes>
 
     <actions>
-        <action id="codeCrudGenerator" class="GenerateCrud" text="Generator CRUD">
+        <action id="codeCrudGenerator" class="GenerateCrud" text="Generate Crud">
             <add-to-group group-id="ProjectViewPopupMenu" anchor="after" relative-to-action="WeighingNewGroup"/>
         </action>
     </actions>
